@@ -23,7 +23,8 @@
 
 using namespace juce;
 class AudioFilePlayerProcessor :
-    public AudioProcessor
+    public AudioProcessor,
+    public juce::AudioProcessorParameter::Listener
 {
 public:
     AudioFilePlayerProcessor();
@@ -51,6 +52,9 @@ public:
 
     void getStateInformation(MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
+
+    void parameterValueChanged (int parameterIndex, float newValue) override;
+    void parameterGestureChanged (int parameterIndex, bool gestureIsStarting) override;
 
     AudioTransportSource transportSource;
     AudioFormatManager formatManager;

@@ -26,6 +26,10 @@ AudioFilePlayerProcessor::AudioFilePlayerProcessor() :
 {
     formatManager.registerBasicFormats();
     readAheadThread.startThread(3);
+
+    auto* loop_param = new juce::AudioParameterBool("loop","loop", true);
+    loop_param->addListener(this);
+    addParameter(loop_param);
 }
 
 AudioFilePlayerProcessor::~AudioFilePlayerProcessor()
@@ -137,6 +141,18 @@ void AudioFilePlayerProcessor::setStateInformation(const void* data, int sizeInB
     }
 }
 
+void AudioFilePlayerProcessor::parameterValueChanged (int parameterIndex, float newValue){
+    if(currentAudioFileSource)
+    {
+        auto is_loop = newValue > 0.5;
+        currentAudioFileSource->setLooping(is_loop);
+    }
+}
+void AudioFilePlayerProcessor::parameterGestureChanged (int parameterIndex, bool gestureIsStarting)
+{
+    juce::ignoreUnused(parameterIndex, gestureIsStarting);
+}
+
 AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new AudioFilePlayerProcessor();
@@ -155,6 +171,9 @@ void AudioFilePlayerProcessor::loadFileIntoTransport(const File& audioFile)
     if (reader != nullptr)
     {
         currentAudioFileSource = new AudioFormatReaderSource(reader, true);
+
+        bool is_loop = getParameters()[0]->getValue() > 0.5;
+        currentAudioFileSource->setLooping(is_loop);
 
         // ..and plug it into our transport source
         transportSource.setSource(
